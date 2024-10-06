@@ -3,7 +3,8 @@ import './taskManager.css'
 import { FaEdit, FaTrashAlt, FaCheckDouble } from "react-icons/fa";
 import {TransitionGroup,CSSTransition} from 'react-transition-group';
 
-const Task = ({id, name, date,completed,handleComplete,editTask,deleteTask}) => {
+const Task = ({handleComplete,editTask,deleteTask,task}) => {
+  const {id, name, date,completed} = task
   return (
     <>
     
@@ -21,7 +22,7 @@ const Task = ({id, name, date,completed,handleComplete,editTask,deleteTask}) => 
           <button disabled={completed} className={completed?'disabled':undefined} >
             <FaEdit color={completed? 'grey':'green'} onClick={()=>editTask(id)}/>
           </button>
-          <button onClick={()=>deleteTask(id)}>
+          <button onClick={()=>deleteTask(task)}>
             <FaTrashAlt color="red" />
           </button>
           <button onClick={()=>handleComplete(id)}>

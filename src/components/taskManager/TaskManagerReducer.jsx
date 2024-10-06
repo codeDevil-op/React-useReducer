@@ -5,17 +5,21 @@ import Task from "./Task";
 import Alert from '../alert/Alert'
 import Confirm from "../confirm/Confirm";
 import { taskReducer } from "../reducer/TaskReducer";
+import TrashModal from "../openTrash/TrashModal";
+import Command from "../commandBox/Command";
 
 
 const TaskManagerReducer = () => {
   const [name, setName] = useState("");
   const [date, setDate] = useState("");
   const [tasks,setTasks] = useLocalStorage('tasks',[])
+  const [trashedTask,setTrashedTask] = useLocalStorage('deletedTasks',[])
 
   // initial state 
 
   const initialState = {
     tasks,
+    trushTask:[],
     taskid:null,
     isediting:false,
     isAlertOpen:false,
@@ -23,13 +27,17 @@ const TaskManagerReducer = () => {
     alertClass:'danger',
     isEditModalOpen:false,
     isDeleteModalOpen:false,
+    isTrashModalOpen:false,
+    isCommandModalOpen:false,
     modalTitle:'',
     modalMsg:'',
     modalActionText:'',
+    recover:false
   }
 // use reducer 
   const [state,dispatch] = useReducer(taskReducer,initialState)
-  
+  const [deletedId,setDeletedId] = useState() 
+ 
 // handle form submit 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -95,22 +103,35 @@ const TaskManagerReducer = () => {
     closeModal();
   }
 // open delete confirmation box 
-  const openDeleteTaskModal = (id)=>{
+  const openDeleteTaskModal = (task)=>{
     dispatch({
       type:'OPEN_DELETE_MODAL',
-      payload: id,
+      payload: task,
     })
   }
   const handleDelete = () => {
   const id = state.taskid
+  const delTask = state.trashedTask
+  // console.log('id on delete',id)
+  setDeletedId(id)
     dispatch({
       type:'DELETE_TASK',
-      payload: id,
+      payload: {
+        id,
+        delTask
+      },
     })
     setTasks(tasks.filter((task)=>task.id!==id))
-    
+    const recovered = tasks.find((task)=>task.id===id)
+    setTrashedTask([...trashedTask,recovered])
     closeModal();
   };
+  const recoverTask = ()=>{
+    dispatch({
+      type:"TASK_RECOVER",
+    })
+    // setTasks(state.trashedTask)
+    }
   // handle completetion of task 
   const handleComplete = (id)=>{
     dispatch({
@@ -143,10 +164,51 @@ const TaskManagerReducer = () => {
     })
   }
 
+  // Open TrashModal Via command 
+
+  useEffect(() => {
+    
+    const handleKeyDown = (event)=>{
+      // console.log("Key pressed:", event.key, event.ctrlKey, event.shiftKey);
+      if( event.shiftKey && event.ctrlKey){
+        dispatch({
+          type:'OPEN_COMMAND_MODEL'
+        })
+      }
+    }
+    window.addEventListener('keydown',handleKeyDown)
+    // return () => {
+     
+    // }
+  },[])
+  
+  const deleteSingleTrashItem = (id)=>{
+    setTrashedTask(trashedTask.filter((task)=>task.id!==id))
+  }
+  const emptyTrash =()=>{
+    setTrashedTask([])
+  }
+
+  // recover from trash 
+
+  const recoverFromTrash = (id)=>{
+    const recoveredItem = trashedTask.find((task)=>{
+      if(task.id===id){
+        return task
+      }
+    })
+    dispatch({
+      type:"RECOVER_FROM_TRASH",
+      payload:recoveredItem
+    })
+    setTasks([...tasks,recoveredItem])
+    setTrashedTask(trashedTask.filter((task)=>task.id!==id))
+  }
+
   return (
     <>
       <div className="--bg-primary">
-      {state.isAlertOpen && <Alert alertContent = {state.alertContent} alertClass = {state.alertClass} onCloseAlert={closeAlert}/>}
+      {state.isAlertOpen && <Alert alertContent = {state.alertContent} alertClass = {state.alertClass} onCloseAlert={closeAlert} alertRecover = {state.recover} recovery={()=>recoverTask()}/>}
       {state.isEditModalOpen && <Confirm
         modalTitle={state.modalTitle}
         modalMsg={state.modalMsg}
@@ -164,7 +226,32 @@ const TaskManagerReducer = () => {
       />
       }
       {/* <Confirm/> */}
-        <h1 className="--text-light --text-center">Task Manager Reducer</h1>
+      {/* Trash Modal */}
+      {state.isTrashModalOpen &&
+      <TrashModal 
+          trashModalTask = {trashedTask}
+        // modalTitle={state.modalTitle}
+        // modalMsg={state.modalMsg}
+        // modalActionText={state.modalActionText}
+        // moadalAction={handleDelete}
+        deleteSingleItem={deleteSingleTrashItem}
+        emptyTrash={emptyTrash}
+        onCloseModal ={closeModal}
+        recoveredTodo = {recoverFromTrash}
+      />
+      }
+      {state.isCommandModalOpen && 
+      <Command
+      dispatch = {dispatch}
+        modalTitle={state.modalTitle}
+        modalMsg={state.modalMsg}
+        modalActionText={state.modalActionText}
+        // moadalAction={handleDelete}
+        onCloseModal ={closeModal}
+      />
+      }
+      {/* Trash Modal */}
+        <h1 className="--text-light --text-center">Task Manager</h1>
         <div className="--flex-center --p">
           <div className="--card --bg-light --width-500px --p --flex-center">
             <form className="form --form-control" onSubmit={handleSubmit}>
@@ -219,7 +306,7 @@ const TaskManagerReducer = () => {
               
                 ); */}
                 {/* second way  */}
-                return <Task key={index} {...task} 
+                return <Task key={task.id} task = {task}
                 handleComplete={handleComplete} 
                 editTask={openEditTaskModal}
                 deleteTask ={openDeleteTaskModal}  

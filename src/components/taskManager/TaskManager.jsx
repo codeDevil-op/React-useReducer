@@ -69,7 +69,7 @@ const TaskManager = () => {
   return (
     <>
       <div className="--bg-primary">
-        <h1 className="--text-light --text-center">Task Manager Reducer</h1>
+        <h1 className="--text-light --text-center">Task Manager</h1>
         <div className="--flex-center --p">
           <div className="--card --bg-light --width-500px --p --flex-center">
             <form className="form --form-control" onSubmit={handleSubmit}>

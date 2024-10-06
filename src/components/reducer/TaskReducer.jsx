@@ -1,3 +1,5 @@
+import { act } from "react"
+
 export const taskReducer = (state,action)=>{
 
     if(action.type ==='EMPTY_FIELD'){
@@ -17,7 +19,8 @@ export const taskReducer = (state,action)=>{
          return{
             ...state,
             tasks:allTask,
-            isAlertOpen:true,alertContent:'Task Added Successfully',alertClass:'success'
+            isAlertOpen:true,alertContent:'Task Added Successfully',alertClass:'success',
+            recover:''
         }
          
     }
@@ -35,14 +38,16 @@ export const taskReducer = (state,action)=>{
       return{...state,isediting:true}
     }
     if(action.type === 'CLOSE_MODAL'){
-      return{...state,isEditModalOpen:false,isDeleteModalOpen:false}
+      return{...state,isEditModalOpen:false,isDeleteModalOpen:false,isTrashModalOpen:false,isCommandModalOpen:false}
     }
     if(action.type==='UPDATE_TASK'){
       // console.log(action.payload)
-      // const updatedTask = action.payload 
+      const updatedTask = action.payload 
+      const {name,date,completed} = updatedTask
       const newTask = state.tasks.map((task)=>{
         if(task.id===action.payload.id){
-          return {...task,name:action.payload.name,date:action.payload.date,completed:action.payload.completed}
+    
+          return {...task,name,date,completed}
         }
         return task
       })
@@ -52,7 +57,8 @@ export const taskReducer = (state,action)=>{
         isediting:false,
         isAlertOpen:true,
         alertContent:'Task Edited Successfully',
-        alertClass:'success'
+        alertClass:'success',
+        recover:''
       }
       
     
@@ -85,27 +91,86 @@ export const taskReducer = (state,action)=>{
         }
         return task;
       })
-      return{...state,tasks:taskCompleted}
+      return{
+        ...state,
+        tasks:taskCompleted,
+        // isAlertOpen:true,
+        // alertContent:'Task Completed Successfully',
+        // alertClass:'success'
+      }
     }
     if(action.type==='OPEN_DELETE_MODAL'){
+      // console.log('i am at open',action.payload)
       return {
         ...state,
+        trashedTask:action.payload,
         isDeleteModalOpen:true,
-        taskid:action.payload,
+        taskid:action.payload.id,
         modalTitle:'Delete Task',
         modalMsg:'You are about to Delete this task',
         modalActionText: 'Delete',
+        
       }
     }
     if(action.type==='DELETE_TASK'){
-      const newTasked = state.tasks.filter((task)=>task.id!==action.payload);
+      const {id,delTask} = action.payload
+      const newTasked = state.tasks.filter((task)=>task.id!==action.payload.id);
+     
+      // console.log(goToTrash)
       return {
         ...state,
         tasks:newTasked,
         isDeleteAnimation:true,
         isAlertOpen:true,
         alertContent:'Task Deleted Successfully',
-        alertClass:'danger'
+        alertClass:'success',
+        recover:true
+      }
+    }
+    if(action.type==='TASK_RECOVER'){
+      // console.log(state.recoverTodo)
+      // const taskRecovered = state.recoverTodo.filter((task)=>{
+      //   if(task.id===action.payload){
+      //     return {...state.tasks,task}       
+      //   }
+      //   return task
+      // })
+      
+      return{
+        ...state,
+        isTrashModalOpen:true,
+        // tasks:taskRecovered,
+        // isAlertOpen:true,
+        // alertContent:'Task Recovered',
+        // alertClass:'success',
+        // recover:false
+      }
+    }
+    
+    if(action.type ==='OPEN_COMMAND_MODEL'){
+      return {
+        ...state,
+        isCommandModalOpen:true,
+        modalTitle:'Enter Command',
+        // modalMsg:<input type="text" placeholder="Enter Command 'Trash'"/>,
+        modalActionText:'Go To'
+      }
+    }
+    if(action.type==='OPEN_TRASH_MODAL'){
+      return{
+        ...state,
+        isTrashModalOpen:true,
+        isCommandModalOpen:false,
+      }
+    }
+    if(action.type === 'RECOVER_FROM_TRASH'){
+      // console.log(action.payload)
+      const task = action.payload
+      const taskRecovered = [...state.tasks,task]
+      return {
+        ...state,
+        tasks:taskRecovered,
+        isTrashModalOpen:false,
       }
     }
     return state;

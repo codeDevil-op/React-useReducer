@@ -10,6 +10,7 @@
     border-color: red;
     z-index: 999;
     animation: slide-in 1s ease forwards;
+    
 }
 @keyframes slide-in{
     0%{
@@ -61,4 +62,18 @@
 }
 .success > *{
     color: #0d8c2f;
+}
+.recover{
+    cursor: pointer;
+    height: 100%;
+    
+    background: transparent;
+    position: absolute;
+    bottom: 0;
+    top: 0;
+    right: 3.5rem;
+    padding: 10px 5px;
+}
+.recover:hover{
+    background: #f3a1a7;
 }

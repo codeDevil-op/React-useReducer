@@ -3,7 +3,7 @@ import './confirm.css'
 const Confirm = ({modalTitle,modalMsg,moadalAction,modalActionText,onCloseModal}) => {
   return (
     <>
-      <div className='confirm'>
+      <div className='confirm' onClick={onCloseModal}>
         <div className="confirm-modal">
 
           <div className="header">
